@@ -1,5 +1,6 @@
 ||baomoi.com^
 ||baoangiang.com.vn^
+||google.com^
 
 
 
