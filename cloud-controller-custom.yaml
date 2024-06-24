@@ -1,0 +1,212 @@
+---
+# Source: cloud-controller-manager/templates/sa.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloud-controller-manager
+  namespace: default
+  annotations:
+
+---
+# Source: cloud-controller-manager/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:cloud-controller-manager:extension-apiserver-authentication-reader
+  namespace: "default"
+  annotations:
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: cloud-controller-manager
+  namespace: "default"
+
+---
+# Source: cloud-controller-manager/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:cloud-controller-manager
+  annotations:
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:cloud-controller-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-controller-manager
+  namespace: "default"
+
+---
+# Source: cloud-controller-manager/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:cloud-controller-manager
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - list
+  - watch
+  - patch
+
+---
+# Source: cloud-controller-manager/templates/deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-controller-manager
+  namespace: default
+  labels:
+    app.kubernetes.io/name: cloud-controller-manager
+    helm.sh/chart: cloud-controller-manager-1.0.4
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      component: controllermanager
+      app: cloud-controller-manager
+      release: release-name
+  template:
+    metadata:
+      annotations:
+        checksum/config: 913075a515241da773244fca71aac40120a29e2204912c7ee9453c888faba67f
+      labels:
+        component: controllermanager
+        app: cloud-controller-manager
+        release: release-name
+        chart: cloud-controller-manager-1.0.4
+        heritage: Helm
+    spec:
+      securityContext:
+        runAsUser: 1001
+      tolerations:
+        - effect: NoSchedule
+          key: node.cloudprovider.kubernetes.io/uninitialized
+          value: "true"
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoExecute
+          key: node.kubernetes.io/not-ready
+      nodeSelector: 
+        
+        node-role.kubernetes.io/control-plane: ""
+      serviceAccountName: cloud-controller-manager
+      containers:
+        - name: cloudstack-cloud-controller-manager
+          image: "ghcr.io/leaseweb/cloudstack-kubernetes-provider:1.1.0"
+          args:
+            - --v=2
+            - --cloud-config=$(CLOUD_CONFIG)
+            - --cloud-provider=cloudstack
+            - --cluster-name=$(CLUSTER_NAME)  
+            - --controllers=cloud-node,cloud-node-lifecycle,route,service
+            - --bind-address=127.0.0.1
+            - "--leader-elect=false"
+          volumeMounts:
+            - mountPath: /etc/config
+              name: cloud-config-volume
+              readOnly: true
+          env:
+            - name: CLOUD_CONFIG
+              value: /etc/config/cloud.conf
+            - name: CLUSTER_NAME
+              value: kubernetes
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      priorityClassName: system-node-critical
+      volumes:
+      - name: cloud-config-volume
+        secret:
+          secretName: cloud-config
