@@ -181,7 +181,7 @@ spec:
       serviceAccountName: cloud-controller-manager
       containers:
         - name: cloudstack-cloud-controller-manager
-          image: "docker.io/leduyquy/cloudstack-k8s:1.1.0"
+          image: docker.io/leduyquy/cloudstack-k8s:1.1.0
           args:
             - --v=2
             - --cloud-config=$(CLOUD_CONFIG)
