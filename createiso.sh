@@ -92,7 +92,7 @@ echo "Downloading kubernetes cluster autoscaler ${AUTOSCALER_URL}"
 autoscaler_conf_file="${working_dir}/autoscaler.yaml"
 curl -sSL ${AUTOSCALER_URL} -o ${autoscaler_conf_file}
 
-PROVIDER_URL="https://raw.githubusercontent.com/leduyquy/waf/main/cloudstack-kubernetes-provider.yaml"
+PROVIDER_URL="https://raw.githubusercontent.com/leduyquy/waf/main/cloud-controller-custom.yaml"
 echo "Downloading kubernetes cluster provider ${PROVIDER_URL}"
 provider_conf_file="${working_dir}/provider.yaml"
 curl -sSL ${PROVIDER_URL} -o ${provider_conf_file}
@@ -130,7 +130,7 @@ output=`printf "%s\n" ${output} ${provider_image}`
 
 while read -r line; do
     echo "Downloading image $line ---"
-    if [[ $line == kubernetesui* ]] || [[ $line == apache* ]] || [[ $line == weaveworks* ]]; then
+    if [[ $line == kubernetesui* ]] || [[ $line == apache* ]] || [[ $line == weaveworks* ]] || [[ $line == *leaseweb* ]]; then
       line="docker.io/${line}"
     fi
     sudo ctr image pull "$line"
