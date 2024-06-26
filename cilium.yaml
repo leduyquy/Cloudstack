@@ -864,6 +864,15 @@ spec:
         - name: tmp
           mountPath: /tmp
       initContainers:
+      - name: change-ownership-container
+        image: busybox
+        command: ["/bin/chown","-R","0:0", "/data/bin"]
+        securityContext:
+          runAsUser: 0
+          privileged: true
+        volumeMounts:
+        - name: cnibin
+          mountPath: /data
       - name: config
         image: quay.io/cilium/cilium:v1.15.6
         imagePullPolicy: IfNotPresent
@@ -1067,6 +1076,10 @@ spec:
         # For sharing configuration between the "config" initContainer and the agent
       - name: tmp
         emptyDir: {}
+      - name: cnibin
+        hostPath:
+          path: /opt/cni
+          type: Directory
         # To keep state between restarts / upgrades
       - name: cilium-run
         hostPath:
