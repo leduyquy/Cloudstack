@@ -144,7 +144,6 @@ if [ -z "${kubeadm_file_permissions}" ]; then
     kubeadm_file_permissions=644
 fi
 chmod ${kubeadm_file_permissions} "${working_dir}/k8s/kubeadm"
-chown root:root "${cni_dir}/cni-plugins-amd64.tgz" 
 echo "Updating imagePullPolicy to IfNotPresent in yaml files..."
 sed -i "s/imagePullPolicy:.*/imagePullPolicy: IfNotPresent/g" ${working_dir}/*.yaml
 
