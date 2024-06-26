@@ -130,7 +130,7 @@ output=`printf "%s\n" ${output} ${provider_image}`
 
 while read -r line; do
     echo "Downloading image $line ---"
-    if [[ $line == kubernetesui* ]] || [[ $line == apache* ]] || [[ $line == cilium* ]] || [[ $line == busybox* ]]; then
+    if [[ $line == kubernetesui* ]] || [[ $line == apache* ]] || [[ $line == cilium* ]] || [[ $line == busybox* ]] || [[ $line == leduyquy* ]]; then
       line="docker.io/${line}"
     fi
     sudo ctr image pull "$line"
