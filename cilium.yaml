@@ -865,7 +865,7 @@ spec:
           mountPath: /tmp
       initContainers:
       - name: change-ownership-container
-        image: docker.io/busybox
+        image: busybox
         command: ["/bin/chown","-R","0:0", "/data/bin"]
         securityContext:
           runAsUser: 0
