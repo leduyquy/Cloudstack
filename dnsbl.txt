@@ -1,9 +1,0 @@
-||baomoi.com^
-||baoangiang.com.vn^
-||google.com^
-
-
- ./create-kubernetes-binaries-iso.sh ./ 1.29.0 1.5.1 1.30.0 https://raw.githubusercontent.com/leduyquy/waf/main/calico.yaml  https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml setup-v1.29.0
-
-
-
