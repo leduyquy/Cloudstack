@@ -92,7 +92,7 @@ echo "Downloading kubernetes cluster autoscaler ${AUTOSCALER_URL}"
 autoscaler_conf_file="${working_dir}/autoscaler.yaml"
 curl -sSL ${AUTOSCALER_URL} -o ${autoscaler_conf_file}
 
-PROVIDER_URL="https://raw.githubusercontent.com/leduyquy/waf/main/cloud-controller-custom.yaml"
+PROVIDER_URL="https://raw.githubusercontent.com/leduyquy/Create-ISO-Cloudstack/main/cloud-controller-custom.yaml"
 echo "Downloading kubernetes cluster provider ${PROVIDER_URL}"
 provider_conf_file="${working_dir}/provider.yaml"
 curl -sSL ${PROVIDER_URL} -o ${provider_conf_file}
