@@ -1476,7 +1476,7 @@ spec:
             runAsGroup: 65532
             runAsNonRoot: true
             runAsUser: 65532
-          image: "quay.io/cilium/hubble-relay:v1.15.6"
+          image: quay.io/cilium/hubble-relay:v1.15.6
           imagePullPolicy: IfNotPresent
           command:
             - hubble-relay
@@ -1582,7 +1582,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: frontend
-        image: "quay.io/cilium/hubble-ui:v0.13.0"
+        image: quay.io/cilium/hubble-ui:v0.13.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
@@ -1603,7 +1603,7 @@ spec:
           mountPath: /tmp
         terminationMessagePolicy: FallbackToLogsOnError
       - name: backend
-        image: "quay.io/cilium/hubble-ui-backend:v0.13.0"
+        image: quay.io/cilium/hubble-ui-backend:v0.13.0
         imagePullPolicy: IfNotPresent
         env:
         - name: EVENTS_SERVER_PORT
