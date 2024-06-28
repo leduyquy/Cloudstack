@@ -1018,7 +1018,7 @@ spec:
           mountPath: /tmp
       initContainers:
       - name: change-ownership-container
-        image: busybox
+        image: leduyquy/busybox:1.1.0
         command: ["/bin/chown","-R","0:0", "/data/bin"]
         securityContext:
           runAsUser: 0
