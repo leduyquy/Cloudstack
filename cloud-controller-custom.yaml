@@ -1,19 +1,18 @@
 ---
-# Source: cloud-controller-manager/templates/sa.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cloud-controller-manager
   namespace: kube-system
-
 ---
-# Source: cloud-controller-manager/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: system:cloud-controller-manager
   annotations:
     rbac.authorization.kubernetes.io/autoupdate: "true"
+  labels:
+    k8s-app: cloud-controller-manager
 rules:
 - apiGroups:
   - coordination.k8s.io
@@ -28,7 +27,6 @@ rules:
   resources:
   - configmaps
   verbs:
-  - get
   - list
   - watch
 - apiGroups:
@@ -94,12 +92,10 @@ rules:
   - watch
   - patch
 ---
-# Source: cloud-controller-manager/templates/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: system:cloud-controller-manager
-  annotations:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -107,15 +103,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cloud-controller-manager
-  namespace: "kube-system"
+  namespace: kube-system
 ---
-# Source: cloud-controller-manager/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: system:cloud-controller-manager:extension-apiserver-authentication-reader
-  namespace: "kube-system"
-  annotations:
+  namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -123,86 +117,63 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cloud-controller-manager
-  namespace: "kube-system"
+  namespace: kube-system
 ---
-# Source: cloud-controller-manager/templates/deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    k8s-app: cloud-controller-manager
   name: cloud-controller-manager
   namespace: kube-system
-  labels:
-    app.kubernetes.io/name: cloud-controller-manager
-    helm.sh/chart: cloud-controller-manager-1.0.4
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/version: "1.1.0"
-    app.kubernetes.io/managed-by: Helm
-  annotations:
 spec:
   replicas: 1
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
-  revisionHistoryLimit: 2
   selector:
     matchLabels:
-      component: controllermanager
-      app: cloud-controller-manager
-      release: release-name
+      k8s-app: cloud-controller-manager
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
   template:
     metadata:
-      annotations:
-        checksum/config: 168c4d357f0185401dff07a55e1bcef69ee5380384200b6e63c4ed4af9ad8f0c
       labels:
-        component: controllermanager
-        app: cloud-controller-manager
-        release: release-name
-        chart: cloud-controller-manager-1.0.4
-        heritage: Helm
+        k8s-app: cloud-controller-manager
     spec:
-      securityContext:
-        runAsUser: 1001
-      tolerations:
-        - effect: NoSchedule
-          key: node.cloudprovider.kubernetes.io/uninitialized
-          value: "true"
-        - key: CriticalAddonsOnly
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoExecute
-          key: node.kubernetes.io/not-ready
-      nodeSelector:
-
-        node-role.kubernetes.io/control-plane: ""
-      serviceAccountName: cloud-controller-manager
       containers:
-        - name: cloudstack-cloud-controller-manager
-          image: docker.io/leduyquy/cloudstack-k8s:1.1.0
-          args:
-            - --v=2
-            - --cloud-config=$(CLOUD_CONFIG)
-            - --cloud-provider=cloudstack
-            - --cluster-name=$(CLUSTER_NAME)
-            - --controllers=cloud-node,cloud-node-lifecycle,route,service
-            - --bind-address=127.0.0.1
-            - "--leader-elect=false"
-          volumeMounts:
-            - mountPath: /config
-              name: cloud-config-volume
-              readOnly: true
-          env:
-            - name: CLOUD_CONFIG
-              value: /config/cloud-config
-            - name: CLUSTER_NAME
-              value: kubernetes
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      priorityClassName: system-node-critical
+      - name: cloud-controller-manager
+        image: apache/cloudstack-kubernetes-provider:v1.1.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --leader-elect=true
+        - --cloud-provider=external-cloudstack
+        - --cloud-config=/config/cloud-config
+        resources:
+          limits:
+            cpu: 50m
+            memory: 120Mi
+          requests:
+            cpu: 10m
+            memory: 60Mi
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+        - name: cacert
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+      restartPolicy: Always
+      serviceAccountName: cloud-controller-manager
+      terminationGracePeriodSeconds: 30
       volumes:
-      - name: cloud-config-volume
+      - name: config-volume
         secret:
           secretName: cloudstack-secret
+      - name: cacert
+        hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+          type: FileOrCreate
+      tolerations:
+      # this is required so CCM can bootstrap itself
+      - key: node.cloudprovider.kubernetes.io/uninitialized
+        value: "true"
+        effect: NoSchedule
