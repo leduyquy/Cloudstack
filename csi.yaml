@@ -113,6 +113,8 @@ spec:
               mountPath: /var/lib/csi/sockets/pluginproxy/
             - name: cloudstack-conf
               mountPath: /etc/cloudstack-csi-driver
+            - name: cacert
+              mountPath: /etc/ssl/certs/ca-certificates.crt
           ports:
             - name: healthz
               containerPort: 9808
@@ -207,6 +209,10 @@ spec:
         - name: cloudstack-conf
           secret:
             secretName: cloudstack-secret
+        - name: cacert
+          hostPath:
+            path: /etc/ssl/certs/ca-certificates.crt
+            type: FileOrCreate
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -268,6 +274,8 @@ spec:
               mountPath: /run/cloud-init/
             - name: cloudstack-conf
               mountPath: /etc/cloudstack-csi-driver
+            - name: cacert
+              mountPath: /etc/ssl/certs/ca-certificates.crt
           ports:
             - name: healthz
               containerPort: 9808
@@ -348,3 +356,7 @@ spec:
         - name: cloudstack-conf
           secret:
             secretName: cloudstack-secret
+        - name: cacert
+          hostPath:
+            path: /etc/ssl/certs/ca-certificates.crt
+            type: FileOrCreate
