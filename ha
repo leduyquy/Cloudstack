@@ -5,7 +5,7 @@ list_node_down="/cloudstack_ha/id_node_down"
 vm_impact="/cloudstack_ha/id_vm_impact"
 log="/var/log/cloudstack-ha.log"
 flag="/cloudstack_ha/have-node-issue"
-
+date=
 # $cmk list hosts type=ConsoleProxy zoneid=$zoneid | jq -r '.host[] | [.id] | @tsv' | sort -k4
 # $cmk list hosts type=SecondaryStorageVM zoneid=$zoneid | jq -r '.host[] | [.id] | @tsv' | sort -k4
 
@@ -21,6 +21,7 @@ if grep -q "true" $flag; then
     if [[ -z "$host_down" ]]; then
         rm $vm_impact $node_down
         echo "false" > $flag
+        echo "$(date) HA recover to health " >> $log
         exit 1
     # else
     #     "Check thêm node mới down và id_instance mới ảnh hưởng"
